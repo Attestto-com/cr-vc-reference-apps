@@ -1,0 +1,24 @@
+{
+  "name": "cr-vc-reference-apps",
+  "version": "0.1.0",
+  "description": "Reference issuer + verifier apps for the Costa Rica SSI driving ecosystem",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "issuer:dev": "pnpm --filter @attestto/cr-vc-issuer-reference dev",
+    "verifier:dev": "pnpm --filter @attestto/cr-vc-verifier-reference dev"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Attestto-com/cr-vc-reference-apps.git"
+  },
+  "homepage": "https://attestto.org",
+  "engines": {
+    "node": ">=20"
+  }
+}

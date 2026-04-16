@@ -1,0 +1,36 @@
+# cr-vc-reference-apps
+
+> Reference issuer + verifier Express services for the Costa Rica SSI driving ecosystem. Wraps @attestto/cr-vc-sdk. Two minimal apps any institution can clone, configure, and deploy.
+
+## Repository structure
+
+- `apps/issuer/` — Express service exposing POST /issue
+- `apps/verifier/` — Express service exposing POST /verify with a static trust registry
+- `examples/issue-and-verify.sh` — end-to-end curl demo
+- `docker-compose.yml` — both services with shared network
+- `.github/workflows/ci.yml` — typecheck + build + test on PRs to main
+
+## Endpoints
+
+### Issuer (default :3001)
+- `POST /issue` — body: { type, subjectDid, claims, expirationDate?, id?, issuerInfo? } → signed VC
+- `GET /health` — issuer DID + public key
+
+### Verifier (default :3002)
+- `POST /verify` — body: { credential, options? } → { valid, checks, errors, warnings, issuerTrusted }
+- `GET /health` — trusted issuer count + list
+
+## Trust registry model
+
+The verifier reads a comma-separated `TRUSTED_ISSUERS` env var of `did|algorithm|base64url-publicKey` triples. This is intentionally simple — a future version will swap the static map for a live trust registry client.
+
+## What this MVP does NOT do
+
+- Revocation (StatusList2021 / CRL) — depends on CRLManager in @attestto/cr-vc-sdk
+- Live trust registry lookup — env-based for now
+- OpenID4VCI / OpenID4VP — tracked as ATT-494
+- Admin UI / QR code input / persistent storage — out of scope
+
+## License
+
+Apache 2.0

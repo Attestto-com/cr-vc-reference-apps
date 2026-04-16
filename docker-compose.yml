@@ -1,0 +1,26 @@
+services:
+  issuer:
+    build:
+      context: .
+      dockerfile: apps/issuer/Dockerfile
+    container_name: cr-vc-issuer
+    ports:
+      - "3001:3001"
+    environment:
+      ISSUER_DID: ${ISSUER_DID:-did:web:issuer.example.cr}
+      ISSUER_ALGORITHM: ${ISSUER_ALGORITHM:-Ed25519}
+      ISSUER_KEY_ID: ${ISSUER_KEY_ID:-#key-1}
+      PORT: 3001
+
+  verifier:
+    build:
+      context: .
+      dockerfile: apps/verifier/Dockerfile
+    container_name: cr-vc-verifier
+    ports:
+      - "3002:3002"
+    environment:
+      TRUSTED_ISSUERS: ${TRUSTED_ISSUERS:-}
+      PORT: 3002
+    depends_on:
+      - issuer
