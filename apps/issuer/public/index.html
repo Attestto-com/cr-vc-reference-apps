@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attestto Issuer Demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1923; color: #e0e6ed; min-height: 100vh; }
+    .container { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; color: #8899a6; margin-bottom: 32px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 12px; color: #8899a6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 12px; background: #1a1f2e; border: 1px solid #2d3748; border-radius: 8px; color: #e0e6ed; font-size: 14px; outline: none; }
+    input:focus, select:focus { border-color: #594FD3; }
+    .row { display: flex; gap: 12px; }
+    .row .form-group { flex: 1; }
+    button { width: 100%; padding: 14px; background: #594FD3; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+    button:hover { background: #4a3fc4; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .qr-section { display: none; text-align: center; margin-top: 32px; padding: 24px; background: #1a1f2e; border-radius: 12px; }
+    .qr-section.active { display: block; }
+    .qr-section h2 { font-size: 18px; margin-bottom: 16px; }
+    #qr-canvas { margin: 0 auto; border-radius: 8px; }
+    .qr-hint { font-size: 13px; color: #8899a6; margin-top: 12px; }
+    .qr-uri { font-size: 11px; color: #4a5568; word-break: break-all; margin-top: 8px; max-height: 60px; overflow: hidden; }
+    .type-select { margin-bottom: 24px; }
+    .error { color: #ef4444; font-size: 13px; margin-top: 8px; }
+    .badge { display: inline-block; padding: 4px 10px; background: #594FD3; border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 24px; }
+    .app-link { display: block; text-align: center; margin-top: 16px; }
+    .app-link a { color: #594FD3; text-decoration: none; font-size: 14px; }
+    .app-link a:hover { text-decoration: underline; }
+    .steps { display: flex; gap: 8px; margin-bottom: 24px; }
+    .step { flex: 1; text-align: center; padding: 8px; background: #1a1f2e; border-radius: 8px; font-size: 12px; color: #8899a6; }
+    .step.active { background: #594FD3; color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Attestto Issuer Demo</h1>
+    <p class="subtitle">Emita una credencial verificable via OID4VCI</p>
+    <span class="badge">Pre-authorized Code Flow</span>
+
+    <div class="steps">
+      <div class="step active" id="step1">1. Datos</div>
+      <div class="step" id="step2">2. QR</div>
+      <div class="step" id="step3">3. Emitida</div>
+    </div>
+
+    <!-- Credential type selector -->
+    <div class="type-select">
+      <div class="form-group">
+        <label>Tipo de credencial</label>
+        <select id="credType" onchange="updateForm()">
+          <option value="CedulaIdentidadCR">Cedula de Identidad CR</option>
+          <option value="IdentityVC">Identidad Notarial</option>
+          <option value="DrivingLicense">Licencia de Conducir</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- CedulaIdentidadCR form -->
+    <form id="form-CedulaIdentidadCR" onsubmit="return createOffer(event)">
+      <div class="row">
+        <div class="form-group">
+          <label>Nombre</label>
+          <input name="nombre" value="Maria" required>
+        </div>
+        <div class="form-group">
+          <label>Primer apellido</label>
+          <input name="apellido1" value="Ejemplo" required>
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label>Segundo apellido</label>
+          <input name="apellido2" value="Ramirez">
+        </div>
+        <div class="form-group">
+          <label>Cedula</label>
+          <input name="cedula" value="1-1234-0567" required pattern="\d-\d{4}-\d{4}">
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label>Fecha nacimiento</label>
+          <input name="dateOfBirth" type="date" value="1990-05-15" required>
+        </div>
+        <div class="form-group">
+          <label>Nacionalidad</label>
+          <input name="nationality" value="CR" maxlength="2" required>
+        </div>
+      </div>
+      <button type="submit">Generar oferta</button>
+    </form>
+
+    <!-- IdentityVC form -->
+    <form id="form-IdentityVC" style="display:none" onsubmit="return createOffer(event)">
+      <div class="form-group">
+        <label>Nombre completo</label>
+        <input name="fullName" value="Maria Ejemplo Ramirez" required>
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label>Tipo documento</label>
+          <select name="nationalIdType">
+            <option value="cedula">Cedula</option>
+            <option value="dimex">DIMEX</option>
+            <option value="pasaporte">Pasaporte</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Numero</label>
+          <input name="nationalIdNumber" value="1-1234-0567" required>
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label>Fecha nacimiento</label>
+          <input name="dateOfBirth" type="date" value="1990-05-15" required>
+        </div>
+        <div class="form-group">
+          <label>Nacionalidad</label>
+          <input name="nationality" value="CR" maxlength="2" required>
+        </div>
+      </div>
+      <button type="submit">Generar oferta</button>
+    </form>
+
+    <!-- DrivingLicense form -->
+    <form id="form-DrivingLicense" style="display:none" onsubmit="return createOffer(event)">
+      <div class="row">
+        <div class="form-group">
+          <label>Nombre completo</label>
+          <input name="fullName" value="Maria Ejemplo Ramirez" required>
+        </div>
+        <div class="form-group">
+          <label>Cedula</label>
+          <input name="cedula" value="1-1234-0567" required>
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label>Categorias</label>
+          <input name="categories" value="B1,A3" required>
+        </div>
+        <div class="form-group">
+          <label>Vence</label>
+          <input name="expiresAt" type="date" value="2030-12-31" required>
+        </div>
+      </div>
+      <button type="submit">Generar oferta</button>
+    </form>
+
+    <div id="error" class="error"></div>
+
+    <!-- QR display -->
+    <div id="qr-section" class="qr-section">
+      <h2>Escanea con Attestto App</h2>
+      <canvas id="qr-canvas"></canvas>
+      <p class="qr-hint">Abre app.attestto.com en tu telefono y escanea este codigo</p>
+      <div id="qr-uri" class="qr-uri"></div>
+      <div class="app-link">
+        <a href="https://app.attestto.com" target="_blank">Abrir Attestto App</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updateForm() {
+      const type = document.getElementById('credType').value
+      document.querySelectorAll('form').forEach(f => f.style.display = 'none')
+      document.getElementById('form-' + type).style.display = 'block'
+      document.getElementById('qr-section').classList.remove('active')
+      document.getElementById('error').textContent = ''
+    }
+
+    async function createOffer(e) {
+      e.preventDefault()
+      const form = e.target
+      const type = document.getElementById('credType').value
+      const data = new FormData(form)
+      const claims = Object.fromEntries(data.entries())
+      const errorEl = document.getElementById('error')
+      errorEl.textContent = ''
+
+      // Build claims based on type
+      let body
+      if (type === 'IdentityVC') {
+        body = {
+          credentialType: type,
+          claims: {
+            fullName: claims.fullName,
+            nationalId: { type: claims.nationalIdType, number: claims.nationalIdNumber, country: claims.nationality },
+            dateOfBirth: claims.dateOfBirth,
+            nationality: claims.nationality,
+          },
+        }
+      } else if (type === 'DrivingLicense') {
+        body = {
+          credentialType: type,
+          claims: {
+            fullName: claims.fullName,
+            cedula: claims.cedula,
+            categories: claims.categories.split(',').map(c => c.trim()),
+            expiresAt: claims.expiresAt,
+          },
+        }
+      } else {
+        body = { credentialType: type, claims }
+      }
+
+      try {
+        const res = await fetch('/offers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+
+        if (!res.ok) {
+          const err = await res.json()
+          throw new Error(err.error || 'Error creating offer')
+        }
+
+        const { offerUri } = await res.json()
+
+        // Generate QR
+        const canvas = document.getElementById('qr-canvas')
+        await QRCode.toCanvas(canvas, offerUri, {
+          width: 280,
+          margin: 2,
+          color: { dark: '#000000', light: '#ffffff' },
+          errorCorrectionLevel: 'L',
+        })
+
+        document.getElementById('qr-uri').textContent = offerUri
+        document.getElementById('qr-section').classList.add('active')
+        document.getElementById('step1').classList.remove('active')
+        document.getElementById('step2').classList.add('active')
+      } catch (err) {
+        errorEl.textContent = err.message
+      }
+
+      return false
+    }
+  </script>
+</body>
+</html>

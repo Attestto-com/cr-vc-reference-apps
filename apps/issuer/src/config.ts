@@ -13,6 +13,7 @@ export interface AppConfig {
   port: number
   issuer: IssuerConfig
   publicKeyB64u: string
+  baseUrl?: string
 }
 
 export function loadConfig(): AppConfig {
@@ -41,5 +42,6 @@ export function loadConfig(): AppConfig {
       keyId: process.env.ISSUER_KEY_ID ?? '#key-1',
     },
     publicKeyB64u,
+    baseUrl: process.env.BASE_URL,
   }
 }
