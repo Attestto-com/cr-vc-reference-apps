@@ -187,7 +187,7 @@ export function createOid4vciRoutes(config: AppConfig): Router {
     try {
       const { offer } = active
       const vc = await issuer.issue({
-        type: offer.credentialType as any,
+        type: offer.credentialType,
         subjectDid: offer.subjectDid ?? 'did:key:unspecified',
         claims: offer.claims,
       })
