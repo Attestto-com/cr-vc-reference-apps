@@ -25,6 +25,7 @@ describe('OID4VCI endpoints', () => {
         .post('/offers')
         .send({
           credentialType: 'DriverIdentity',
+          subjectDid: 'did:key:z6MkTest',
           claims: { nombre: 'Maria', cedula: '1-1234-0567' },
         })
 
@@ -51,6 +52,7 @@ describe('OID4VCI endpoints', () => {
         .post('/offers')
         .send({
           credentialType: 'DriverIdentity',
+          subjectDid: 'did:key:z6MkTest',
           claims: { nombre: 'Maria', cedula: '1-1234-0567' },
         })
 
@@ -99,6 +101,7 @@ describe('OID4VCI endpoints', () => {
         .post('/offers')
         .send({
           credentialType: 'DriverIdentity',
+          subjectDid: 'did:key:z6MkTest',
           claims: { nombre: 'Maria', cedula: '1-1234-0567' },
         })
 

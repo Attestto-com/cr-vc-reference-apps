@@ -33,12 +33,14 @@ interface ActiveToken {
 }
 
 const TTL_MS = 5 * 60 * 1000 // 5 minutes
+const MAX_OFFERS = 1000
+const MAX_TOKENS = 1000
 
 export function createOid4vciRoutes(config: AppConfig): Router {
   const router = createRouter()
   const issuer = new VCIssuer(config.issuer)
 
-  // In-memory stores
+  // In-memory stores (capped to prevent OOM)
   const offers = new Map<string, PendingOffer>()
   const tokens = new Map<string, ActiveToken>()
 
@@ -93,6 +95,11 @@ export function createOid4vciRoutes(config: AppConfig): Router {
 
   router.post('/offers', (req: Request, res: Response) => {
     gc()
+
+    if (offers.size >= MAX_OFFERS) {
+      return res.status(429).json({ error: 'Too many pending offers — try again later' })
+    }
+
     const { credentialType, subjectDid, claims } = req.body
 
     if (!credentialType || !claims) {
@@ -186,9 +193,13 @@ export function createOid4vciRoutes(config: AppConfig): Router {
 
     try {
       const { offer } = active
+      if (!offer.subjectDid) {
+        return res.status(400).json({ error: 'No subject DID bound to this credential offer' })
+      }
+
       const vc = await issuer.issue({
         type: offer.credentialType,
-        subjectDid: offer.subjectDid ?? 'did:key:unspecified',
+        subjectDid: offer.subjectDid,
         claims: offer.claims,
       })
 
@@ -196,9 +207,8 @@ export function createOid4vciRoutes(config: AppConfig): Router {
         format: 'jwt_vc_json',
         credential: vc,
       })
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Issuance failed'
-      return res.status(500).json({ error: message })
+    } catch {
+      return res.status(500).json({ error: 'Credential issuance failed' })
     }
   })
 
